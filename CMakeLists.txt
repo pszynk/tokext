@@ -1,0 +1,168 @@
+# <Copyright Holder>. Copyright (C) <Copyright Year(s)>. <License>.
+
+#
+# Project Properties
+#
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8.8)
+PROJECT (tokext C CXX)
+SET (APPLICATION_NAME "Tokext")
+SET (APPLICATION_CODENAME "${PROJECT_NAME}")
+SET (APPLICATION_COPYRIGHT_YEARS "2014")
+SET (APPLICATION_VERSION_MAJOR 1)
+SET (APPLICATION_VERSION_MINOR 0)
+SET (APPLICATION_VERSION_PATCH 0)
+SET (APPLICATION_VERSION_TYPE SNAPSHOT)
+SET (APPLICATION_VERSION_STRING
+    "${APPLICATION_VERSION_MAJOR}.${APPLICATION_VERSION_MINOR}.${APPLICATION_VERSION_PATCH}-${APPLICATION_VERSION_TYPE}")
+SET (APPLICATION_VENDOR_ID "pszynk")
+SET (APPLICATION_VENDOR_NAME "Pawel Szynkiewicz")
+SET (APPLICATION_VENDOR_URL "pszynk.com")
+SET (APPLICATION_ID "${APPLICATION_VENDOR_ID}.${PROJECT_NAME}")
+
+#
+# Output Options
+#
+SET (CMAKE_COLOR_MAKEFILE ON) # Use 1 for debugging, 0 for release
+
+#
+# Debugging Options
+#
+SET (CMAKE_VERBOSE_MAKEFILE ON) # Use 1 for debugging, 0 for release
+
+#
+# Project Build Type
+#
+
+#
+# Project Output Paths
+#
+
+SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+
+#
+# Project Search Paths
+#
+SET (MAINFOLDER ${PROJECT_SOURCE_DIR})
+
+LIST (APPEND CMAKE_PREFIX_PATH "${MAINFOLDER}")
+LIST (APPEND CMAKE_PREFIX_PATH "${MAINFOLDER}/tools")
+LIST (APPEND CMAKE_PREFIX_PATH "${MAINFOLDER}/thirdparty")
+SET (CMAKE_MODULE_PATH "${MAINFOLDER}/tools/share/cmake")
+INCLUDE_DIRECTORIES("${MAINFOLDER}/include")
+INCLUDE_DIRECTORIES("${MAINFOLDER}/thirdparty/include")
+
+#
+# Project Dependency Path
+#
+#SET (THIRD_PARTY_SRCS "${MAINFOLDER}/thirdparty/share")
+
+#
+# Locate Project Prerequisites
+#
+
+## Log4Cxx
+FIND_PACKAGE (Log4Cxx REQUIRED)
+INCLUDE_DIRECTORIES(${LOG4CXX_INCLUDE_DIRS})
+LINK_DIRECTORIES(${LOG4CXX_LIBRARY_DIRS})
+
+## BOOST {{{
+#SET (Boost_ADDITIONAL_VERSIONS
+#    "1.39" "1.39.0" "1.40" "1.40.0" "1.41" "1.41.0" "1.42" "1.42.0" "1.43"
+#    "1.43.0" "1.44" "1.44.0" "1.45" "1.45.0" "1.46" "1.46.0" "1.47" "1.47.0"
+#    "1.48" "1.48.0" "1.49" "1.49.0" "1.50" "1.50.0")
+#FIND_PACKAGE (Boost 1.37 COMPONENTS "date_time" "filesystem" "graph"
+#"iostreams" "program_options" "regex" "serialization" "signals" "system"
+#"thread" "wserialization" REQUIRED)
+#FIND_PACKAGE (Boost 1.37)
+#INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+#LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+#}}}
+
+# TODO - pewnie nie potrzebne {{{
+## CWD
+#FIND_PACKAGE (CWD REQUIRED)
+#INCLUDE_DIRECTORIES(${CWD_INCLUDE_DIRS})
+#LINK_DIRECTORIES(${CWD_LIBRARY_DIRS})
+
+## GTest
+
+#ADD_SUBDIRECTORY("${THIRD_PARTY_SRCS}/gtest-1.7.0")
+#enable_testing()
+#include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+
+#FIND_PACKAGE (GTest REQUIRED)
+#INCLUDE_DIRECTORIES(${GTEST_INCLUDE_DIRS})
+#LINK_DIRECTORIES(${GTEST_LIBRARY_DIRS})
+#ENABLE_TESTING()
+# }}}
+
+# {{{
+# EXTERNAL PROJECTS
+#
+#TODO dodac opecję?
+#INCLUDE(ExternalProject)
+#FIND_PACKAGE(Git REQUIRED)
+
+#ExternalProject_Add(
+#    catch
+#    PREFIX ${CMAKE_BINARY_DIR}/catch
+#    GIT_REPOSITORY https://github.com/philsquared/Catch.git
+#    TIMEOUT 10
+#    UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+#    CONFIGURE_COMMAND ""
+#    BUILD_COMMAND ""
+#    INSTALL_COMMAND ""
+#    LOG_DOWNLOAD ON
+#   )
+
+## Expose required variable (CATCH_INCLUDE_DIR) to parent scope
+#ExternalProject_Get_Property(catch source_dir)
+#set(CATCH_INCLUDE_DIR ${source_dir}/include CACHE INTERNAL "Path to include folder for Catch")
+# }}}
+
+
+#
+# Configure Files {{{
+#
+FILE (GLOB_RECURSE CONFIGINPUTS1 include/*.in.h.cmake)
+FILE (GLOB_RECURSE CONFIGINPUTS2 include/*.h.in.cmake)
+FILE (GLOB_RECURSE CONFIGINPUTS3 src/*.in.h.cmake)
+FILE (GLOB_RECURSE CONFIGINPUTS4 src/*.h.in.cmake)
+FILE (GLOB_RECURSE CONFIGINPUTS5 test/*.in.h.cmake)
+FILE (GLOB_RECURSE CONFIGINPUTS6 test/*.h.in.cmake)
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS1}")
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS2}")
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS3}")
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS4}")
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS5}")
+LIST (APPEND CONFIGINPUTS "${CONFIGINPUTS6}")
+FOREACH (CONFIGINPUT ${CONFIGINPUTS})
+    STRING (REPLACE ".in.h.cmake" ".h" CONFIGOUTPUT1 "${CONFIGINPUT}")
+    STRING (REPLACE ".h.in.cmake" ".h" CONFIGOUTPUT2 "${CONFIGOUTPUT1}")
+    CONFIGURE_FILE ("${CONFIGINPUT}" "${CONFIGOUTPUT2}")
+ENDFOREACH (CONFIGINPUT ${CONFIGINPUTS})
+#}}}
+
+if(UNIX)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+endif()
+
+#
+# Add Build Targets
+#
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(test)
+
+#
+# Add Install Targets
+#
+IF (EXISTS "${MAINFOLDER}/include/${PROJECT_NAME}" AND IS_DIRECTORY "${MAINFOLDER}/include/${PROJECT_NAME}")
+    INSTALL(DIRECTORY "${MAINFOLDER}/include/${PROJECT_NAME}" DESTINATION "include")
+ENDIF (EXISTS "${MAINFOLDER}/include/${PROJECT_NAME}" AND IS_DIRECTORY "${MAINFOLDER}/include/${PROJECT_NAME}")
+
+#
+# Add Documentation Targets
+#
+INCLUDE (DocumentationTargets)
